@@ -1,0 +1,107 @@
+<!-- livebook:{"file_entries":[{"name":"input1.txt","type":"attachment"}]} -->
+
+# AoC 2023 #1
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Part 1
+
+```elixir
+input =
+  Kino.FS.file_path("input1.txt")
+  |> File.read!()
+
+lines = String.split(input)
+```
+
+```elixir
+defmodule AoC do
+  def line_digits(line) do
+    [[first] | tail] = Regex.scan(~r/\d/, line)
+
+    if Enum.empty?(tail) do
+      [first, first]
+    else
+      [last] = List.last(tail)
+      [first, last]
+    end
+  end
+
+  def strs_to_integer(strs) do
+    {res, _} = strs |> Enum.join() |> Integer.parse()
+    res
+  end
+end
+```
+
+```elixir
+lines
+|> Enum.map(fn l ->
+  AoC.line_digits(l) |> AoC.strs_to_integer()
+end)
+|> Enum.reduce(&+/2)
+```
+
+## Part 2
+
+```elixir
+defmodule AoC2 do
+  @words ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+  @regex (Enum.join(@words, "|") <> "|\\d") |> Regex.compile!()
+  def line_digits(line) do
+    [first | tail] = overlap_scan(line)
+    first = first |> word_map
+
+    if Enum.empty?(tail) do
+      [first, first]
+    else
+      last = List.last(tail)
+      last = last |> word_map
+      [first, last]
+    end
+  end
+
+  def strs_to_integer(strs) do
+    {res, _} = strs |> Enum.join() |> Integer.parse()
+    res
+  end
+
+  def word_map(s) do
+    index = Enum.find_index(@words, fn x -> s == x end)
+
+    if index do
+      (index + 1) |> Integer.to_string()
+    else
+      s
+    end
+  end
+
+  def overlap_scan(l, offset \\ 0, acc \\ []) do
+    case Regex.run(@regex, l, return: :index, offset: offset) do
+      [{start, len}] -> overlap_scan(l, start + 1, [binary_part(l, start, len) | acc])
+      _ -> Enum.reverse(acc)
+    end
+  end
+
+  def regex, do: @regex
+end
+```
+
+```elixir
+# data = lines
+# |> Enum.map(fn l ->
+#    output = AoC2.line_digits(l) |> AoC2.strs_to_integer 
+#    %{input: l, output: output}
+# end)
+# Kino.DataTable.new(data)
+
+lines
+|> Enum.map(fn l ->
+  AoC2.line_digits(l) |> AoC2.strs_to_integer()
+end)
+|> Enum.reduce(&+/2)
+```
