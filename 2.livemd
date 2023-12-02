@@ -1,0 +1,93 @@
+<!-- livebook:{"file_entries":[{"name":"input2.txt","type":"attachment"}]} -->
+
+# AoC 2023 #2
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Part 1
+
+```elixir
+input =
+  Kino.FS.file_path("input2.txt")
+  |> File.read!()
+
+lines = String.split(input, "\n", trim: true)
+```
+
+```elixir
+defmodule AoC do
+  def parse(lines), do: Enum.map(lines, fn l -> parse_line(l) end)
+
+  def parse_line(l) do
+    [_, id, sets] = Regex.run(~r/Game (\d+): (.+)/, l)
+    {id, _} = Integer.parse(id)
+    sets = String.split(sets, ";") |> Enum.map(fn x -> parse_set(x) end)
+    %{id: id, sets: sets}
+  end
+
+  def parse_set(s) do
+    String.split(s, ",") |> Enum.map(fn x -> parse_cube(x) end)
+  end
+
+  def parse_cube(s) do
+    [_, number, color] = Regex.run(~r/(\d+)\s+(\w+)/, s)
+    {number, _} = Integer.parse(number)
+
+    color =
+      case color do
+        "red" -> :red
+        "green" -> :green
+        "blue" -> :blue
+      end
+
+    {number, color}
+  end
+
+  def game_maxes(game) do
+    game[:sets]
+    |> Enum.concat()
+    |> Enum.reduce(%{red: 0, green: 0, blue: 0}, fn {n, color}, acc ->
+      Map.put(acc, color, max(n, acc[color]))
+    end)
+  end
+
+  def possible_games(games, given) do
+    games
+    |> Enum.filter(fn game ->
+      maxes = game_maxes(game)
+
+      given
+      |> Enum.map(fn {color, n} ->
+        n >= maxes[color]
+      end)
+      |> Enum.all?()
+    end)
+    |> Enum.map(fn %{id: id} -> id end)
+  end
+
+  def zero_is_one(0), do: 1
+  def zero_is_one(n), do: n
+
+  def power_of_games(games) do
+    games
+    |> Enum.map(fn game ->
+      maxes = game_maxes(game)
+      zero_is_one(maxes.red) * zero_is_one(maxes.green) * zero_is_one(maxes.blue)
+    end)
+  end
+end
+```
+
+```elixir
+AoC.parse(lines) |> AoC.possible_games(%{red: 12, green: 13, blue: 14}) |> Enum.reduce(&+/2)
+```
+
+## Part 2
+
+```elixir
+AoC.parse(lines) |> AoC.power_of_games() |> Enum.reduce(&+/2)
+```
