@@ -1,0 +1,46 @@
+<!-- livebook:{"app_settings":{"access_type":"public","output_type":"rich","slug":"welcome"}} -->
+
+# Livebook <3 Hugging Face
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.9"}
+])
+```
+
+## Section
+
+This is the source of a deployed notebook.
+This notebook is static and simply renders the markdown content below.
+
+```elixir
+Kino.Markdown.new("""
+Welcome to Livebook in Hugging Face!
+
+This is a deployed notebook, which is also a perfect place to teach you
+the ropes in using Livebook with Hugging Face.
+
+## Getting started
+
+First off, if you want to run your own copy of Livebook,
+[check our tutorial](https://news.livebook.dev/livebook-inside-hugging-face-spaces-3LQaRi).
+Once you clone the space, remember to set `LIVEBOOK_PASSWORD` as
+an environment variable on your Space Settings page (a minimum of
+12 digits is required).
+
+If you are new to Elixir and Livebook, [head out to the Learn page](/learn)
+(it requires a password), there you will find resources to get started
+with both.
+
+## Deploying notebooks
+
+Livebook is fully collaborative and it enables you to deploy interactive
+and collaborative apps just as well. All of your deployable notebooks will
+be in the "public-apps" directory of your Spaces repository.
+
+To deploy your own notebook on Hugging Face, you must click the
+<i class="ri-livebook-deploy"></i> icon on the notebook sidebar, set a "Slug"
+for the notebook, mark it as public and then drop its `.livemd` file into
+the "public-apps" directory of your Spaces repo.
+""")
+```
