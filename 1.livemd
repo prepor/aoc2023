@@ -1,4 +1,4 @@
-<!-- livebook:{"file_entries":[{"name":"input1.txt","type":"attachment"}]} -->
+<!-- livebook:{"app_settings":{"access_type":"public","show_source":true,"slug":"1"},"file_entries":[{"name":"input1.txt","type":"attachment"}]} -->
 
 # AoC 2023 #1
 
