@@ -1,0 +1,203 @@
+<!-- livebook:{"file_entries":[{"name":"input3.txt","type":"attachment"}]} -->
+
+# AoC 2023 #3
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Part 1
+
+```elixir
+input =
+  Kino.FS.file_path("input3.txt")
+  |> File.read!()
+
+lines = String.split(input, "\n", trim: true)
+```
+
+```elixir
+defmodule AoC do
+  def symbols(lines) do
+    for {line, i} <- Enum.with_index(lines),
+        {symbol, j} <- line |> String.graphemes() |> Enum.with_index(),
+        Regex.match?(~r/[^.\d]/, symbol),
+        into: MapSet.new() do
+      {i, j}
+    end
+  end
+
+  def parts_sum(lines, symbols) do
+    digits =
+      for {line, i} <- Enum.with_index(lines),
+          {symbol, j} <- line |> String.graphemes() |> Enum.with_index() do
+        {{i, j}, symbol}
+      end
+
+    Enum.reduce(digits, {[], 0, false}, part_detector(symbols))
+  end
+
+  def part_detector(symbols) do
+    fn {coord, symbol}, acc = {buf, sum, is_adjacent} ->
+      is_digit = Regex.match?(~r/\d/, symbol)
+
+      if is_digit do
+        {digit, _} = Integer.parse(symbol)
+
+        is_adjacent =
+          is_adjacent ||
+            Enum.any?(adjacent_coords(coord), fn coord ->
+              MapSet.member?(symbols, coord)
+            end)
+
+        if is_adjacent do
+          {[digit | buf], sum, true}
+        else
+          {[digit | buf], sum, false}
+        end
+      else
+        if Enum.empty?(buf) do
+          acc
+        else
+          if is_adjacent do
+            {[], sum + sum_digits(buf), false}
+          else
+            {[], sum, false}
+          end
+        end
+      end
+    end
+  end
+
+  def sum_digits(buf) do
+    buf
+    |> Enum.with_index()
+    |> Enum.reduce(0, fn {d, index}, acc ->
+      acc + d * Integer.pow(10, index)
+    end)
+  end
+
+  def adjacent_coords({i, j}) do
+    [
+      {i - 1, j - 1},
+      {i - 1, j},
+      {i - 1, j + 1},
+      {i, j - 1},
+      {i, j + 1},
+      {i + 1, j - 1},
+      {i + 1, j},
+      {i + 1, j + 1}
+    ]
+  end
+end
+```
+
+```elixir
+AoC.parts_sum(lines, AoC.symbols(lines))
+```
+
+## Part 2
+
+```elixir
+defmodule AoC2 do
+  def gears(lines) do
+    for {line, i} <- Enum.with_index(lines),
+        {symbol, j} <- line |> String.graphemes() |> Enum.with_index(),
+        Regex.match?(~r/\*/, symbol),
+        into: %{} do
+      {{i, j}, MapSet.new()}
+    end
+  end
+
+  def gears_adjacents(lines, gears) do
+    symbols =
+      for {line, i} <- Enum.with_index(lines),
+          {symbol, j} <- line |> String.graphemes() |> Enum.with_index() do
+        {{i, j}, symbol}
+      end
+
+    Enum.reduce(symbols, {[], gears, []}, &gears_detector/2)
+  end
+
+  def gears_detector({coord, symbol}, {buf, gears, adjacent_gears}) do
+    is_digit = Regex.match?(~r/\d/, symbol)
+
+    if is_digit do
+      {digit, _} = Integer.parse(symbol)
+
+      new_adjacent_gears =
+        for coord <- adjacent_coords(coord),
+            (case Map.fetch(gears, coord) do
+               {:ok, _} -> true
+               _ -> false
+             end) do
+          coord
+        end
+
+      {[digit | buf], gears, adjacent_gears ++ new_adjacent_gears}
+    else
+      if Enum.empty?(buf) do
+        {[], gears, []}
+      else
+        number = sum_digits(buf)
+
+        gears2 =
+          adjacent_gears
+          |> Enum.reduce(gears, fn coord, gears ->
+            Map.update!(gears, coord, fn numbers -> MapSet.put(numbers, number) end)
+          end)
+
+        {[], gears2, []}
+      end
+    end
+  end
+
+  def sum_digits(buf) do
+    buf
+    |> Enum.with_index()
+    |> Enum.reduce(0, fn {d, index}, acc ->
+      acc + d * Integer.pow(10, index)
+    end)
+  end
+
+  def adjacent_coords({i, j}) do
+    [
+      {i - 1, j - 1},
+      {i - 1, j},
+      {i - 1, j + 1},
+      {i, j - 1},
+      {i, j + 1},
+      {i + 1, j - 1},
+      {i + 1, j},
+      {i + 1, j + 1}
+    ]
+  end
+end
+
+# lines = String.split("
+# 467..114..
+# ...*......
+# ..35..633.
+# ......#...
+# 617*......
+# .....+.58.
+# ..592.....
+# ......755.
+# ...$.*....
+# .664.598..", "\n", trim: true)
+gears = AoC2.gears(lines)
+{_, gears_with_numbers, _} = AoC2.gears_adjacents(lines, gears)
+
+for {_, numbers} <- gears_with_numbers,
+    MapSet.size(numbers) == 2 do
+  [v1, v2] = MapSet.to_list(numbers)
+  v1 * v2
+end
+|> Enum.reduce(0, &+/2)
+
+# gears_with_numbers
+# |> Enum.map(fn {coord, numbers} -> )
+# Kino.DataTable.new(data)
+```
