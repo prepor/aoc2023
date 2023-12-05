@@ -2,6 +2,7 @@
                                   whites/2]).
 :- autoload(library(readutil), [read_file_to_string/3]).
 :- autoload(library(lists), [member/2, min_list/2]).
+:- autoload(library(pprint), [print_term/2]).
 
 example("seeds: 79 14 55 13
 
@@ -44,6 +45,11 @@ parse(I) :-
     atom_codes(I, Codes), phrase(p(Seeds, Maps), Codes),
     assert_data(Seeds, Maps).
 
+parse2(I) :-
+    atom_codes(I, Codes), phrase(p2(Seeds, Maps), Codes),
+    assert_data(Seeds, Maps).
+
+
 :- dynamic seeds/1.
 :- dynamic m/3.
 assert_data(Seeds, []) :-
@@ -81,19 +87,53 @@ part1(A) :-
             Locs),
     min_list(Locs, A).
 
+part2(A) :-
+    seeds(Seeds),
+    part2(999999999999999999, Seeds, A).
+
+% file_input(I), parse2(I), part2(A).
+
+part2(Current, [Seed-Len|Seeds], A) :-
+    End is Seed + Len,
+    part2(Current, Seeds, Seed, End, A).
+
+part2(Current, Seeds, Seed, End, A) :-
+    Seed < End, !,
+    map("seed", "location", Seed, L),
+    Next is Seed + 1,
+    (L < Current ->
+     print_term(min(L), [nl(true)]),
+     part2(L, Seeds, Next, End, A);
+     part2(Current, Seeds, Next, End, A)).
+
+part2(Current, [], _, _, Current).
+
+part2(Current, [Seed-Len|Seeds], _, _, A) :-
+    End is Seed + Len,
+    part2(Current, Seeds, Seed, End, A).
+                             
 
 % --- PARSER
 p(Seeds, Maps) -->
     p_seeds(Seeds), "\n", !, p_maps(Maps), blanks.
 
-p(Seeds, Maps) -->
-    p_seeds(Seeds), "\n", !, p_maps(Maps), blanks.
+p2(Seeds, Maps) -->
+    p2_seeds(Seeds), "\n", !, p_maps(Maps), blanks.
 
 p_numbers([]) --> [].
 p_numbers([N|Rs]) --> blanks,integer(N),p_numbers(Rs).
 
 p_seeds(Seeds) -->
     "seeds:", blanks, p_numbers(Seeds).
+
+p2_seeds(Seeds) -->
+    "seeds:", blanks, p_number_pairs(Seeds).
+
+p_number_pairs([]) --> [].
+p_number_pairs([N1-N2|Rs]) --> blanks,integer(N1),
+                               blanks,integer(N2) ,
+                               p_number_pairs(Rs).
+
 
 p_ranges([]) --> [].
 p_ranges([range(Dest, Source, Len)|Ranges]) -->
