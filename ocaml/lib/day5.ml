@@ -76,14 +76,7 @@ let parse input =
     and+ dest_cat = alphas
     and+ _ = string " map:"
     and+ ranges = many range in
-    {
-      source_cat;
-      dest_cat;
-      ranges
-      (* |> List.sort *)
-      (*      ~compare:(fun { start_map; _ } { start_map = start_map2; _ } -> *)
-      (*        Int.compare start_map start_map2); *);
-    }
+    { source_cat; dest_cat; ranges }
   in
   let parser =
     let+ _ = string "seeds: "
@@ -198,11 +191,10 @@ let%expect_test _ =
 
 let%expect_test _ =
   let open Stdio in
-  (* parse example |> part2 |> Stdio.printf "%d"; *)
   time (fun () ->
       In_channel.with_file "/Users/prepor/Dropbox/lab/aoc2023/files/input5.txt"
         ~f:(fun f -> In_channel.input_all f))
   |> parse |> part2 |> Stdio.printf "%d";
   [%expect {|
-    Time: 0.0391006469727 ms
+    Time: 0.0410079956055 ms
     137516820 |}]
