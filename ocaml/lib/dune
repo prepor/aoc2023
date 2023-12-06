@@ -1,0 +1,12 @@
+(library
+ (public_name aoc)
+ (name aoc)
+ (inline_tests)
+ (libraries core stdio ppx_show.runtime angstrom)
+ (preprocess
+  (pps ppx_show ppx_sexp_conv ppx_compare ppx_expect ppx_let)))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
